@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, FlatList, View } from 'react-native';
 import { ThemedView } from './ThemedView';
 import { ThemedText } from './ThemedText';
+import { IconSymbol } from './ui/IconSymbol';
+import { MicrophoneButton } from './MicrophoneButton';
 
 interface Message {
   id: string;
@@ -39,19 +41,20 @@ export default function Chat() {
         inverted
       />
       <View style={styles.inputContainer}>
+        <MicrophoneButton />
         <TextInput
           style={styles.input}
           value={inputText}
           onChangeText={setInputText}
           placeholder="Type a message..."
-          placeholderTextColor="#999"
+          placeholderTextColor="#666"
         />
         <TouchableOpacity
           style={styles.sendButton}
           onPress={handleSend}
           disabled={!inputText.trim()}
         >
-          <ThemedText style={styles.sendButtonText}>Send</ThemedText>
+          <IconSymbol name="paperplane.fill" size={20} color="#666" />
         </TouchableOpacity>
       </View>
     </ThemedView>
@@ -61,47 +64,43 @@ export default function Chat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000000',
   },
   messageList: {
     flex: 1,
   },
   messageContainer: {
     marginHorizontal: 16,
-    marginVertical: 4,
+    marginVertical: 8,
     alignSelf: 'flex-start',
-    backgroundColor: '#e1e1e1',
+    backgroundColor: '#2C2C2E',
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     maxWidth: '80%',
   },
   messageText: {
     fontSize: 16,
+    color: '#FFFFFF',
   },
   inputContainer: {
+    margin: 16,
+    backgroundColor: '#1C1C1E',
+    borderRadius: 12,
     flexDirection: 'row',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e1e1e1',
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   input: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
+    color: '#FFFFFF',
     fontSize: 16,
+    paddingHorizontal: 16,
   },
   sendButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 20,
-    paddingHorizontal: 16,
+    padding: 8,
+    marginRight: 8,
     justifyContent: 'center',
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    alignItems: 'center',
   },
 });
