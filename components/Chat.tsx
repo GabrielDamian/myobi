@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, FlatList, View } from 'react-native';
 import { ThemedView } from './ThemedView';
 import { ThemedText } from './ThemedText';
-import { IconSymbol } from './ui/IconSymbol';
+// import { IconSymbol } from './ui/IconSymbol';
 import { MicrophoneButton } from './MicrophoneButton';
 
 interface Message {
@@ -54,7 +54,7 @@ export default function Chat() {
           onPress={handleSend}
           disabled={!inputText.trim()}
         >
-          <IconSymbol name="paperplane.fill" size={20} color="#666" />
+          {/* <IconSymbol name="paperplane.fill" size={20} color="#666" /> */}
         </TouchableOpacity>
       </View>
     </ThemedView>
