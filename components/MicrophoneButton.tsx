@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, View, Text } from 'react-native';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { TouchableOpacity, StyleSheet, View, Text, Image } from 'react-native';
 import { SoundWave } from './SoundWave';
 import { Audio } from 'expo-av';
 
@@ -129,7 +128,10 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
         style={styles.container}
         onPress={() => setShowOverlay(true)}
       >
-        <MaterialIcons name="mic" size={20} color="#666" />
+        <Image
+          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/14945/14945199.png' }}
+          style={{ width: 20, height: 20, tintColor: '#666' }}
+        />
       </TouchableOpacity>
 
       {showOverlay && (
@@ -138,7 +140,10 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
             style={styles.trashButton}
             onPress={handleTrashPress}
           >
-            <MaterialIcons name="delete" size={24} color="white" />
+            <Image
+              source={{ uri: 'https://cdn-icons-png.flaticon.com/512/14945/14945199.png' }}
+              style={{ width: 24, height: 24, tintColor: 'white' }}
+            />
           </TouchableOpacity>
           <View style={styles.waveContainer}>
             <SoundWave isRecording={isRecording} audioLevel={audioLevel} />
@@ -150,7 +155,10 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
           </View>
           <View style={styles.circleContainer}>
             <TouchableOpacity style={styles.circle} onPress={handleSendAudio}>
-              <MaterialIcons name="arrow-forward" size={20} color="#B20000" />
+              <Image
+                source={{ uri: 'https://cdn-icons-png.flaticon.com/512/14945/14945199.png' }}
+                style={{ width: 20, height: 20, tintColor: '#B20000' }}
+              />
             </TouchableOpacity>
           </View>
         </View>
