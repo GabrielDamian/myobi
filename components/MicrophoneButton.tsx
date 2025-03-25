@@ -5,7 +5,7 @@ import { SoundWave } from './SoundWave';
 import { Audio } from 'expo-av';
 
 interface MicrophoneButtonProps {
-  onAudioRecorded: (audioUri: string) => void;
+  onAudioRecorded: (audioUri: string, amplitudes: number[]) => void;
 }
 
 export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
@@ -14,6 +14,8 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
   const [recordingTime, setRecordingTime] = useState(0);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [amplitudes, setAmplitudes] = useState<number[]>([]);
+  const [lastSecond, setLastSecond] = useState(-1);
 
   useEffect(() => {
     if (showOverlay) {
@@ -49,13 +51,25 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
         playsInSilentModeIOS: true,
       });
 
+      // Reset states
+      setAmplitudes([]);
+      setLastSecond(-1);
+
       const { recording: newRecording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY,
         (status) => {
           if (status.isRecording && status.metering !== undefined) {
             // Convert dB meter level to a value between 0 and 1
             const normalizedLevel = (status.metering + 160) / 160;
-            setAudioLevel(Math.max(0, Math.min(normalizedLevel, 1)));
+            const level = Math.max(0, Math.min(normalizedLevel, 1));
+            setAudioLevel(level);
+
+            // Store amplitude every second
+            const currentSecond = Math.floor(status.durationMillis / 1000);
+            if (currentSecond !== lastSecond) {
+              setLastSecond(currentSecond);
+              setAmplitudes(prev => [...prev, level]);
+            }
           }
         },
         50 // Update interval in milliseconds
@@ -81,7 +95,7 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       if (uri) {
-        onAudioRecorded(uri);
+        onAudioRecorded(uri, amplitudes);
       }
     } catch (err) {
       console.error('Failed to stop recording', err);

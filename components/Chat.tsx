@@ -6,10 +6,15 @@ import { FontAwesome } from '@expo/vector-icons';
 import { MicrophoneButton } from './MicrophoneButton';
 import { AudioMessage } from './AudioMessage';
 
+interface AudioMessageData {
+  uri: string;
+  amplitudes: number[];
+}
+
 interface Message {
   id: string;
   type: 'text' | 'audio';
-  content: string;
+  content: string | AudioMessageData;
 }
 
 export default function Chat() {
@@ -28,11 +33,11 @@ export default function Chat() {
     }
   };
 
-  const handleAudioSend = (audioUri: string) => {
+  const handleAudioSend = (audioUri: string, amplitudes: number[]) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       type: 'audio',
-      content: audioUri,
+      content: { uri: audioUri, amplitudes },
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
   };
@@ -40,9 +45,12 @@ export default function Chat() {
   const renderMessage = ({ item }: { item: Message }) => (
     <View style={styles.messageContainer}>
       {item.type === 'text' ? (
-        <ThemedText style={styles.messageText}>{item.content}</ThemedText>
+        <ThemedText style={styles.messageText}>{item.content as string}</ThemedText>
       ) : (
-        <AudioMessage audioUri={item.content} />
+        <AudioMessage
+          audioUri={(item.content as AudioMessageData).uri}
+          amplitudes={(item.content as AudioMessageData).amplitudes}
+        />
       )}
     </View>
   );

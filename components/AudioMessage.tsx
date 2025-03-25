@@ -5,18 +5,38 @@ import { Audio, AVPlaybackStatus } from 'expo-av';
 
 interface AudioMessageProps {
   audioUri: string;
+  amplitudes: number[];
 }
 
-export function AudioMessage({ audioUri }: AudioMessageProps) {
+const BAR_COUNT = 30;
+const BAR_WIDTH = 3;
+const BAR_GAP = 2;
+const BASE_HEIGHT = 30;
+const MIN_HEIGHT = 4;
+
+export function AudioMessage({ audioUri, amplitudes }: AudioMessageProps) {
+  
+  useEffect(()=>{
+    console.log("amplitudes:",amplitudes)
+  },[amplitudes])
+
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [position, setPosition] = useState(0);
+
+  // Map any number of amplitudes to exactly 30 bars
+  const audioLevels = Array.from({ length: BAR_COUNT }, (_, i) => {
+    const index = Math.floor(i * amplitudes.length / BAR_COUNT);
+    return amplitudes[index] || 0;
+  });
 
   useEffect(() => {
     // Configure audio mode
     Audio.setAudioModeAsync({
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
-      shouldDuckAndroid: true
+      shouldDuckAndroid: true,
     }).catch(err => console.error('Error setting audio mode:', err));
 
     // Load audio
@@ -40,9 +60,17 @@ export function AudioMessage({ audioUri }: AudioMessageProps) {
 
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUri },
-        { shouldPlay: false },
+        { 
+          shouldPlay: false,
+          progressUpdateIntervalMillis: 50,
+        },
         onPlaybackStatusUpdate
       );
+
+      const status = await newSound.getStatusAsync();
+      if (status.isLoaded) {
+        setDuration(status.durationMillis || 0);
+      }
 
       setSound(newSound);
     } catch (err) {
@@ -58,9 +86,13 @@ export function AudioMessage({ audioUri }: AudioMessageProps) {
       setIsPlaying(status.isPlaying);
     }
 
+    // Update position
+    setPosition(status.positionMillis);
+
     // Handle playback completion
     if (status.didJustFinish) {
       setIsPlaying(false);
+      setPosition(0);
       sound?.setPositionAsync(0).catch(console.error);
     }
   };
@@ -92,6 +124,26 @@ export function AudioMessage({ audioUri }: AudioMessageProps) {
           color="#FFFFFF"
         />
       </TouchableOpacity>
+      <View style={styles.barsContainer}>
+        {audioLevels.map((level, index) => {
+          const isCurrentBar = index <= Math.floor((position / duration) * BAR_COUNT);
+          const barHeight = Math.max(MIN_HEIGHT, BASE_HEIGHT * level);
+          
+          return (
+            <View
+              key={index}
+              style={[
+                styles.bar,
+                {
+                  height: barHeight,
+                  opacity: isCurrentBar ? 1 : 0.4,
+                  backgroundColor: isCurrentBar ? '#4A90E2' : '#8E8E93',
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -102,6 +154,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: 220,
   },
   playButton: {
     width: 40,
@@ -110,5 +165,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A4A4C',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 10,
+  },
+  barsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: BASE_HEIGHT,
+    width: BAR_COUNT * (BAR_WIDTH + BAR_GAP),
+  },
+  bar: {
+    width: BAR_WIDTH,
+    marginHorizontal: BAR_GAP / 2,
+    borderRadius: BAR_WIDTH / 2,
   },
 });
