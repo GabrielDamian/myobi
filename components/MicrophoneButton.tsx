@@ -20,10 +20,13 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
   useEffect(() => {
     if (showOverlay) {
       startRecording();
-    } else {
-      stopRecording();
     }
   }, [showOverlay]);
+
+  const handleTrashPress = async () => {
+    await stopRecording(false);
+    setShowOverlay(false);
+  };
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -83,7 +86,7 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
     }
   };
 
-  const stopRecording = async () => {
+  const stopRecording = async (shouldPublish: boolean = true) => {
     if (!recording) {
       setIsRecording(false);
       setRecordingTime(0);
@@ -93,9 +96,11 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
 
     try {
       await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      if (uri) {
-        onAudioRecorded(uri, amplitudes);
+      if (shouldPublish) {
+        const uri = recording.getURI();
+        if (uri) {
+          onAudioRecorded(uri, amplitudes);
+        }
       }
     } catch (err) {
       console.error('Failed to stop recording', err);
@@ -131,7 +136,7 @@ export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
         <View style={styles.overlay}>
           <TouchableOpacity
             style={styles.trashButton}
-            onPress={() => setShowOverlay(false)}
+            onPress={handleTrashPress}
           >
             <MaterialIcons name="delete" size={24} color="white" />
           </TouchableOpacity>
