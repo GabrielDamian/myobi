@@ -6,11 +6,12 @@ interface SoundWaveProps {
   audioLevel: number;
 }
 
-const BAR_COUNT = 30;
+const BAR_COUNT = 40;
 const BAR_WIDTH = 3;
-const BAR_GAP = 2;
-const MIN_SCALE = 0.02;
-const BASE_HEIGHT = 40;
+const BAR_GAP = 4;
+const MIN_SCALE = 0.0001;
+const BASE_HEIGHT = 30;
+const MOVEMENT_RIGHT_TO_LEFT = 0.6; // Controls wave movement speed (lower = slower)
 
 export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
   const animatedValues = useRef(
@@ -25,24 +26,31 @@ export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
     const baseWave = Math.sin((index / BAR_COUNT) * Math.PI * 2 + timePhase);
     
     // Secondary waves with different frequencies
-    const wave2 = Math.sin((index / BAR_COUNT) * Math.PI * 4 + timePhase * 1.5) * 0.5;
-    const wave3 = Math.sin((index / BAR_COUNT) * Math.PI * 6 + timePhase * 0.75) * 0.3;
+    const wave2 = Math.sin((index / BAR_COUNT) * Math.PI * 4 + timePhase * 1.5) * 0.3;
+    const wave3 = Math.sin((index / BAR_COUNT) * Math.PI * 6 + timePhase * 0.75) * 0.2;
     
     // Combine waves with aggressive decay
-    let scale = (baseWave + wave2 + wave3) / 1.8;
+    let scale = (baseWave + wave2 + wave3) / 2;
     
-    // Very quick decay based on audio level
+    // Very quick decay based on audio level with more extreme range
     const effectiveAudioLevel = audioLevel || 0;
-    scale = scale * Math.max(0.01, effectiveAudioLevel * 0.7);
+    const audioScale = effectiveAudioLevel < 0.15
+        ? MIN_SCALE
+        : Math.pow(effectiveAudioLevel, 1.5);
+    
+    scale = scale * audioScale;
 
     // Scale to MIN_SCALE-1 range with aggressive minimum
-    return Math.max(MIN_SCALE, Math.min(1, (scale + 1) / 2.5));
+    const finalScale = Math.max(MIN_SCALE, Math.min(1, scale + 0.5));
+    
+    // For very low audio levels, force extremely small values
+    return effectiveAudioLevel < 0.05 ? MIN_SCALE : finalScale;
   };
 
   useEffect(() => {
     const animate = () => {
       if (isRecording) {
-        timePhase.current += 0.3; // Faster movement
+        timePhase.current += MOVEMENT_RIGHT_TO_LEFT; // Controlled by MOVEMENT_RIGHT_TO_LEFT constant
 
         // Instant update of all bars
         animatedValues.forEach((value, index) => {
@@ -113,6 +121,6 @@ const styles = StyleSheet.create({
     height: BASE_HEIGHT,
     marginHorizontal: BAR_GAP / 2,
     backgroundColor: '#fff',
-    borderRadius: BAR_WIDTH / 2,
+    borderRadius: 18,
   },
 });
