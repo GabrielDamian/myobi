@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
+import { ThemedText } from './ThemedText';
 
 interface SoundWaveProps {
   isRecording: boolean;
@@ -11,7 +12,7 @@ const BAR_WIDTH = 3;
 const BAR_GAP = 4;
 const MIN_SCALE = 0.0001;
 const BASE_HEIGHT = 30;
-const MOVEMENT_RIGHT_TO_LEFT = 0.6; // Controls wave movement speed (lower = slower)
+const MOVEMENT_RIGHT_TO_LEFT = 0.5; // Controls wave movement speed (lower = slower)
 
 export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
   const animatedValues = useRef(
@@ -44,7 +45,7 @@ export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
     const finalScale = Math.max(MIN_SCALE, Math.min(1, scale + 0.5));
     
     // For very low audio levels, set a minimum visible height (small dot)
-    return effectiveAudioLevel < 0.05 ? 0.1 : finalScale;
+    return effectiveAudioLevel < 0.05 ? 0.1 : finalScale-0.4
   };
 
   useEffect(() => {
@@ -82,21 +83,26 @@ export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.barsContainer}>
-        {animatedValues.map((value, index) => (
-          <Animated.View
-            key={index}
-            style={[
-              styles.bar,
-              {
-                opacity: isRecording ? 1 : 0.5,
-                transform: [{
-                  scaleY: value
-                }]
-              },
-            ]}
-          />
-        ))}
+      <View style={styles.contentContainer}>
+        <View style={styles.barsContainer}>
+          {animatedValues.map((value, index) => (
+            <Animated.View
+              key={index}
+              style={[
+                styles.bar,
+                {
+                  opacity: isRecording ? 1 : 0.5,
+                  transform: [{
+                    scaleY: value
+                  }]
+                },
+              ]}
+            />
+          ))}
+        </View>
+        <ThemedText style={styles.audioLevel}>
+          {audioLevel.toFixed(2)}
+        </ThemedText>
       </View>
     </View>
   );
@@ -109,11 +115,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    justifyContent: 'center',
+  },
   barsContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     height: BASE_HEIGHT,
-    width: '100%',
+    width: 'auto',
     justifyContent: 'center',
   },
   bar: {
@@ -122,5 +134,9 @@ const styles = StyleSheet.create({
     marginHorizontal: BAR_GAP / 2,
     backgroundColor: '#fff',
     borderRadius: 18,
+  },
+  audioLevel: {
+    marginLeft: 10,
+    fontSize: 12,
   },
 });
