@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, FlatList, View } from 'react-native';
 import { ThemedView } from './ThemedView';
 import { ThemedText } from './ThemedText';
-// import { IconSymbol } from './ui/IconSymbol';
+import { FontAwesome } from '@expo/vector-icons';
 import { MicrophoneButton } from './MicrophoneButton';
+import { AudioMessage } from './AudioMessage';
 
 interface Message {
   id: string;
-  text: string;
+  type: 'text' | 'audio';
+  content: string;
 }
 
 export default function Chat() {
@@ -18,16 +20,30 @@ export default function Chat() {
     if (inputText.trim()) {
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: inputText.trim(),
+        type: 'text',
+        content: inputText.trim(),
       };
       setMessages(prevMessages => [...prevMessages, newMessage]);
       setInputText('');
     }
   };
 
+  const handleAudioSend = (audioUri: string) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      type: 'audio',
+      content: audioUri,
+    };
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+  };
+
   const renderMessage = ({ item }: { item: Message }) => (
     <View style={styles.messageContainer}>
-      <ThemedText style={styles.messageText}>{item.text}</ThemedText>
+      {item.type === 'text' ? (
+        <ThemedText style={styles.messageText}>{item.content}</ThemedText>
+      ) : (
+        <AudioMessage audioUri={item.content} />
+      )}
     </View>
   );
 
@@ -41,7 +57,7 @@ export default function Chat() {
         inverted
       />
       <View style={styles.inputContainer}>
-        <MicrophoneButton />
+        <MicrophoneButton onAudioRecorded={handleAudioSend} />
         <TextInput
           style={styles.input}
           value={inputText}

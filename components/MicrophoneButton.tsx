@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, View, Text, Platform, PermissionsAndroid, NativeEventEmitter, NativeModules } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Text } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SoundWave } from './SoundWave';
+import { Audio } from 'expo-av';
 
-export function MicrophoneButton() {
+interface MicrophoneButtonProps {
+  onAudioRecorded: (audioUri: string) => void;
+}
+
+export function MicrophoneButton({ onAudioRecorded }: MicrophoneButtonProps) {
   const [showOverlay, setShowOverlay] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [audioLevel, setAudioLevel] = useState(0.5);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0);
 
   useEffect(() => {
     if (showOverlay) {
@@ -22,17 +28,70 @@ export function MicrophoneButton() {
     if (isRecording) {
       timer = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
-        // Simulate audio level changes when recording
-        setAudioLevel(Math.random() * 0.7 + 0.3); // Random value between 0.3 and 1.0
       }, 100);
     }
     return () => {
       if (timer) {
         clearInterval(timer);
       }
-      setRecordingTime(0);
     };
   }, [isRecording]);
+
+  const startRecording = async () => {
+    try {
+      if (recording) {
+        await recording.stopAndUnloadAsync();
+      }
+
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        (status) => {
+          if (status.isRecording && status.metering !== undefined) {
+            // Convert dB meter level to a value between 0 and 1
+            const normalizedLevel = (status.metering + 160) / 160;
+            setAudioLevel(Math.max(0, Math.min(normalizedLevel, 1)));
+          }
+        },
+        50 // Update interval in milliseconds
+      );
+
+      setRecording(newRecording);
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Failed to start recording', err);
+      setShowOverlay(false);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) {
+      setIsRecording(false);
+      setRecordingTime(0);
+      setAudioLevel(0);
+      return;
+    }
+
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      if (uri) {
+        onAudioRecorded(uri);
+      }
+    } catch (err) {
+      console.error('Failed to stop recording', err);
+    }
+
+    setRecording(null);
+    setIsRecording(false);
+    setRecordingTime(0);
+    setAudioLevel(0);
+  };
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -40,53 +99,9 @@ export function MicrophoneButton() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const checkPermission = async (): Promise<boolean> => {
-    if (Platform.OS !== 'android') {
-      return true;
-    }
-
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-        {
-          title: 'Microphone Permission',
-          message: 'App needs access to your microphone to record audio.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
-  };
-
-  const startRecording = async () => {
-    const hasPermission = await checkPermission();
-    if (!hasPermission) {
-      return;
-    }
-
-    try {
-      setIsRecording(true);
-      // Note: Actual audio recording implementation would go here
-      // For now, we're just simulating the recording state and audio levels
-    } catch (error) {
-      console.error('Failed to start recording:', error);
-    }
-  };
-
-  const stopRecording = async () => {
-    if (isRecording) {
-      try {
-        setIsRecording(false);
-        // Note: Actual audio recording stop implementation would go here
-      } catch (error) {
-        console.error('Failed to stop recording:', error);
-      }
-    }
+  const handleSendAudio = async () => {
+    await stopRecording();
+    setShowOverlay(false);
   };
 
   return (
@@ -110,12 +125,14 @@ export function MicrophoneButton() {
             <SoundWave isRecording={isRecording} audioLevel={audioLevel} />
           </View>
           <View style={styles.timerContainer}>
-            <Text style={styles.timerText}>{formatTime(Math.floor(recordingTime / 10))}</Text>
+            <Text style={styles.timerText}>
+              {formatTime(Math.floor(recordingTime / 10))}
+            </Text>
           </View>
           <View style={styles.circleContainer}>
-            <View style={styles.circle}>
+            <TouchableOpacity style={styles.circle} onPress={handleSendAudio}>
               <MaterialIcons name="arrow-forward" size={20} color="#B20000" />
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
       )}
