@@ -9,6 +9,14 @@ interface AudioMessageProps {
 }
 
 const BAR_COUNT = 30;
+
+function mapAmplitudesToBars(amplitudes: number[]): number[] {
+  console.log("mapAmplitudesToBars:", amplitudes);
+  return Array.from({ length: BAR_COUNT }, (_, i) => {
+    const index = Math.floor(i * amplitudes.length / BAR_COUNT);
+    return amplitudes[index] || 0;
+  });
+}
 const BAR_WIDTH = 3;
 const BAR_GAP = 2;
 const BASE_HEIGHT = 30;
@@ -16,20 +24,12 @@ const MIN_HEIGHT = 4;
 
 export function AudioMessage({ audioUri, amplitudes }: AudioMessageProps) {
   
-  useEffect(()=>{
-    console.log("amplitudes:",amplitudes)
-  },[amplitudes])
-
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
 
-  // Map any number of amplitudes to exactly 30 bars
-  const audioLevels = Array.from({ length: BAR_COUNT }, (_, i) => {
-    const index = Math.floor(i * amplitudes.length / BAR_COUNT);
-    return amplitudes[index] || 0;
-  });
+  const audioLevels = mapAmplitudesToBars(amplitudes);
 
   useEffect(() => {
     // Configure audio mode
