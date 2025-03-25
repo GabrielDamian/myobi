@@ -43,10 +43,14 @@ function mapAmplitudesToBars(amplitudes: number[]): number[] {
     return sum / count;
   });
 
+  // Apply scaling factor to emphasize differences (make small values smaller and big values bigger)
+  const scalingPower = 2; // Square the values to create more contrast
+  const scaledBars = smoothedBars.map(value => Math.pow(value, scalingPower));
+  
   // Normalize values between 0 and 1
-  const min = Math.min(...smoothedBars);
-  const max = Math.max(...smoothedBars);
-  const normalizedBars = smoothedBars.map(value =>
+  const min = Math.min(...scaledBars);
+  const max = Math.max(...scaledBars);
+  const normalizedBars = scaledBars.map(value =>
     max === min ? 0 : (value - min) / (max - min)
   );
 
