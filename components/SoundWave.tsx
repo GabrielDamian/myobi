@@ -100,9 +100,9 @@ export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
             />
           ))}
         </View>
-        <ThemedText style={styles.audioLevel}>
+        {/* <ThemedText style={styles.audioLevel}>
           {audioLevel.toFixed(2)}
-        </ThemedText>
+        </ThemedText> */}
       </View>
     </View>
   );
