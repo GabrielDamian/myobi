@@ -12,10 +12,45 @@ const BAR_COUNT = 30;
 
 function mapAmplitudesToBars(amplitudes: number[]): number[] {
   console.log("mapAmplitudesToBars:", amplitudes);
-  return Array.from({ length: BAR_COUNT }, (_, i) => {
+  const barsHeight =  Array.from({ length: BAR_COUNT }, (_, i) => {
     const index = Math.floor(i * amplitudes.length / BAR_COUNT);
     return amplitudes[index] || 0;
   });
+
+  const windowSize = 1;
+  
+  // Calculate moving average
+  const smoothedBars = barsHeight.map((value, index) => {
+    let sum = value;
+    let count = 1;
+    
+    // Add left neighbors
+    for (let i = 1; i <= windowSize; i++) {
+      if (index - i >= 0) {
+        sum += barsHeight[index - i];
+        count++;
+      }
+    }
+    
+    // Add right neighbors
+    for (let i = 1; i <= windowSize; i++) {
+      if (index + i < barsHeight.length) {
+        sum += barsHeight[index + i];
+        count++;
+      }
+    }
+    
+    return sum / count;
+  });
+
+  // Normalize values between 0 and 1
+  const min = Math.min(...smoothedBars);
+  const max = Math.max(...smoothedBars);
+  const normalizedBars = smoothedBars.map(value =>
+    max === min ? 0 : (value - min) / (max - min)
+  );
+
+  return normalizedBars;
 }
 const BAR_WIDTH = 3;
 const BAR_GAP = 2;
