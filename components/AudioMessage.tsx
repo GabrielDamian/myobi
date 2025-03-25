@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { ThemedText } from './ThemedText';
 import { FontAwesome } from '@expo/vector-icons';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 
@@ -11,16 +10,24 @@ interface AudioMessageProps {
 export function AudioMessage({ audioUri }: AudioMessageProps) {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [duration, setDuration] = useState<number | null>(null);
 
   useEffect(() => {
-    // Load the audio file when the component mounts
+    // Configure audio mode
+    Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: true,
+      shouldDuckAndroid: true
+    }).catch(err => console.error('Error setting audio mode:', err));
+
+    // Load audio
     loadAudio();
     
-    // Cleanup when component unmounts
+    // Cleanup
     return () => {
       if (sound) {
-        sound.unloadAsync();
+        sound.unloadAsync().catch(err =>
+          console.error('Error unloading sound:', err)
+        );
       }
     };
   }, [audioUri]);
@@ -38,12 +45,6 @@ export function AudioMessage({ audioUri }: AudioMessageProps) {
       );
 
       setSound(newSound);
-
-      // Get duration
-      const status = await newSound.getStatusAsync();
-      if (status.isLoaded && status.durationMillis) {
-        setDuration(status.durationMillis);
-      }
     } catch (err) {
       console.error('Error loading audio:', err);
     }
@@ -52,18 +53,16 @@ export function AudioMessage({ audioUri }: AudioMessageProps) {
   const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (!status.isLoaded) return;
 
-    setIsPlaying(status.isPlaying);
+    // Update playing state
+    if (status.isPlaying !== isPlaying) {
+      setIsPlaying(status.isPlaying);
+    }
+
+    // Handle playback completion
     if (status.didJustFinish) {
       setIsPlaying(false);
+      sound?.setPositionAsync(0).catch(console.error);
     }
-  };
-
-  const formatDuration = (ms: number | null): string => {
-    if (!ms) return '0:00';
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const handlePress = async () => {
@@ -73,13 +72,11 @@ export function AudioMessage({ audioUri }: AudioMessageProps) {
       if (isPlaying) {
         await sound.pauseAsync();
       } else {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-        });
         await sound.playAsync();
       }
     } catch (err) {
       console.error('Error playing/pausing audio:', err);
+      setIsPlaying(false);
     }
   };
 
@@ -95,29 +92,23 @@ export function AudioMessage({ audioUri }: AudioMessageProps) {
           color="#FFFFFF"
         />
       </TouchableOpacity>
-      <ThemedText style={styles.duration}>
-        {formatDuration(duration)}
-      </ThemedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    backgroundColor: '#3A3A3C',
+    borderRadius: 20,
+    padding: 10,
+    alignSelf: 'flex-start',
   },
   playButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#3A3A3C',
+    backgroundColor: '#4A4A4C',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  duration: {
-    fontSize: 14,
-    color: '#FFFFFF',
   },
 });
