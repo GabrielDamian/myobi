@@ -9,7 +9,7 @@ interface SoundWaveProps {
 const BAR_COUNT = 30;
 const BAR_WIDTH = 3;
 const BAR_GAP = 2;
-const MIN_SCALE = 0.05;
+const MIN_SCALE = 0.02;
 const BASE_HEIGHT = 40;
 
 export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
@@ -32,7 +32,8 @@ export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
     let scale = (baseWave + wave2 + wave3) / 1.8;
     
     // Very quick decay based on audio level
-    scale = scale * Math.max(0.1, audioLevel * 0.7);
+    const effectiveAudioLevel = audioLevel || 0;
+    scale = scale * Math.max(0.01, effectiveAudioLevel * 0.7);
 
     // Scale to MIN_SCALE-1 range with aggressive minimum
     return Math.max(MIN_SCALE, Math.min(1, (scale + 1) / 2.5));
