@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { ThemedText } from './ThemedText';
 
 interface SoundWaveProps {
   isRecording: boolean;
@@ -33,19 +32,19 @@ export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
     // Combine waves with aggressive decay
     let scale = (baseWave + wave2 + wave3) / 2;
     
-    // Very quick decay based on audio level with more extreme range
+    // More sensitive audio level response
     const effectiveAudioLevel = audioLevel || 0;
-    const audioScale = effectiveAudioLevel < 0.15
+    const audioScale = effectiveAudioLevel < 0.05
         ? MIN_SCALE
-        : Math.pow(effectiveAudioLevel, 1.5);
+        : Math.pow(effectiveAudioLevel, 1.2); // Less aggressive power for smoother response
     
     scale = scale * audioScale;
 
-    // Scale to MIN_SCALE-1 range with aggressive minimum
-    const finalScale = Math.max(MIN_SCALE, Math.min(1, scale + 0.5));
+    // Scale to MIN_SCALE-1 range with better minimum visibility
+    const finalScale = Math.max(0.1, Math.min(1, scale + 0.5));
     
-    // For very low audio levels, set a minimum visible height (small dot)
-    return effectiveAudioLevel < 0.05 ? 0.1 : finalScale-0.4
+    // Keep more of the wave visible
+    return effectiveAudioLevel < 0.02 ? 0.1 : finalScale
   };
 
   useEffect(() => {

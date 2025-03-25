@@ -3,8 +3,8 @@ import { StyleSheet, TextInput, TouchableOpacity, FlatList, View } from 'react-n
 import { ThemedView } from './ThemedView';
 import { ThemedText } from './ThemedText';
 import { FontAwesome } from '@expo/vector-icons';
-import { MicrophoneButton } from './MicrophoneButton';
-import { AudioMessage } from './AudioMessage';
+import { MicrophoneButton } from './AudioFile/MicrophoneButton';
+import { AudioMessage } from './AudioFile/AudioMessage';
 
 interface AudioMessageData {
   uri: string;

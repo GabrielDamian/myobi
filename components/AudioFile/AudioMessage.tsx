@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { StyleSheet, TouchableOpacity, View, Image } from 'react-native';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 
 interface AudioMessageProps {
@@ -157,10 +156,9 @@ export function AudioMessage({ audioUri, amplitudes }: AudioMessageProps) {
         style={styles.playButton}
         onPress={handlePress}
       >
-        <FontAwesome
-          name={isPlaying ? "pause" : "play"}
-          size={20}
-          color="#FFFFFF"
+        <Image
+          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/14945/14945199.png' }}
+          style={{ width: 20, height: 20, tintColor: '#FFFFFF' }}
         />
       </TouchableOpacity>
       <View style={styles.barsContainer}>
