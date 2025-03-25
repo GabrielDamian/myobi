@@ -43,8 +43,8 @@ export function SoundWave({ isRecording, audioLevel }: SoundWaveProps) {
     // Scale to MIN_SCALE-1 range with aggressive minimum
     const finalScale = Math.max(MIN_SCALE, Math.min(1, scale + 0.5));
     
-    // For very low audio levels, force extremely small values
-    return effectiveAudioLevel < 0.05 ? MIN_SCALE : finalScale;
+    // For very low audio levels, set a minimum visible height (small dot)
+    return effectiveAudioLevel < 0.05 ? 0.1 : finalScale;
   };
 
   useEffect(() => {
